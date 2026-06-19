@@ -54,6 +54,11 @@ jobs:
           tmpdir=$(mktemp -d)
           cd "$tmpdir" && npm init -y && npm install better-sqlite3
           mkdir -p $GITHUB_WORKSPACE/apps/vscode-ext/node_modules
+          # bun install creates symlinks to its own ABI-incompatible cache; remove them
+          # first so we can place the Node.js-compiled binary in their place.
+          rm -rf $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/better-sqlite3
+          rm -rf $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/bindings
+          rm -rf $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/file-uri-to-path
           cp -r "$tmpdir/node_modules/better-sqlite3"    $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/
           cp -r "$tmpdir/node_modules/bindings"          $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/ 2>/dev/null || true
           cp -r "$tmpdir/node_modules/file-uri-to-path"  $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/ 2>/dev/null || true
