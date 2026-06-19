@@ -81,7 +81,7 @@ Snippets are saved to `~/.snipforge/snippets.db` — a SQLite file on your machi
 If you want to contribute or run from source:
 
 ```bash
-git clone https://github.com/swayam-yadav/snipforge
+git clone https://github.com/swayamyadav05/snipforge
 cd SnipForge
 bun install
 bun run apps/cli/src/index.ts   # run without installing

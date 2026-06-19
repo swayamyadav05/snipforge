@@ -16,11 +16,9 @@ if (!result.success) {
   process.exit(1)
 }
 
-// Strip any existing shebang then write to a file with NO extension.
-// Bin files without an extension avoid npm's ESM validation on .js files
-// (which rejects #!/usr/bin/env bun as an invalid Node.js shebang).
+// Strip any shebang from the bundle output before prepending our own.
 const content = readFileSync('dist/snipforge.js', 'utf8')
 const body = content.startsWith('#!') ? content.slice(content.indexOf('\n') + 1) : content
-writeFileSync('dist/snipforge', '#!/usr/bin/env bun\n' + body, { mode: 0o755 })
+writeFileSync('dist/snipforge.js', '#!/usr/bin/env bun\n' + body, { mode: 0o755 })
 
-console.log('Built dist/snipforge')
+console.log('Built dist/snipforge.js')

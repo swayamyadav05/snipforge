@@ -8,7 +8,7 @@ Search **"SnipForge"** in the VS Code Extensions panel (`Ctrl+Shift+X`) and clic
 
 Or from the terminal:
 ```bash
-code --install-extension swayam-yadav.snipforge
+code --install-extension swayamyadav05.snipforge
 ```
 
 ## Usage
@@ -36,7 +36,7 @@ If you want to contribute or run from source:
 **Prerequisites:** [Bun](https://bun.sh), VS Code
 
 ```bash
-git clone https://github.com/swayam-yadav/snipforge
+git clone https://github.com/swayamyadav05/snipforge
 cd SnipForge
 bun install
 ```

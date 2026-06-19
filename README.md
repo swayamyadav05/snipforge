@@ -22,7 +22,7 @@ Search **"SnipForge"** in the VS Code Extensions panel and click Install.
 
 Or install from the command line:
 ```bash
-code --install-extension swayam-yadav.snipforge
+code --install-extension swayamyadav05.snipforge
 ```
 
 [Extension docs →](apps/vscode-ext/README.md)
@@ -42,7 +42,7 @@ If you want to build on SnipForge or run everything locally:
 **Prerequisites:** [Bun](https://bun.sh) and [Turborepo](https://turborepo.dev) (`bun add -g turbo`)
 
 ```bash
-git clone https://github.com/swayam-yadav/snipforge
+git clone https://github.com/swayamyadav05/snipforge
 cd SnipForge
 bun install
 turbo dev     # starts all apps in watch mode

@@ -1,11 +1,11 @@
 {
   "name": "snipforge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Save and retrieve code snippets from the terminal",
   "license": "MIT",
-  "type": "module",
+  "keywords": ["snippet", "cli", "developer-tools", "code", "productivity"],
   "bin": {
-    "snipforge": "./dist/snipforge"
+    "snipforge": "./dist/snipforge.js"
   },
   "repository": {
     "type": "git",
