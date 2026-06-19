@@ -2,7 +2,7 @@
   "name": "snipforge-vscode",
   "displayName": "SnipForge - Code Snippets",
   "description": "Save and retrieve code snippets directly from VS Code",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.80.0"
   },

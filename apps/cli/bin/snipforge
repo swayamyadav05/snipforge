@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+const { spawnSync } = require('child_process')
+const path = require('path')
+
+const bundle = path.join(__dirname, '..', 'dist', 'snipforge.js')
+const result = spawnSync('bun', [bundle, ...process.argv.slice(2)], {
+  stdio: 'inherit',
+  env: process.env,
+})
+
+if (result.error) {
+  if (result.error.code === 'ENOENT') {
+    process.stderr.write('snipforge requires Bun runtime. Install it at https://bun.sh\n')
+  } else {
+    process.stderr.write(result.error.message + '\n')
+  }
+  process.exit(1)
+}
+
+process.exit(result.status ?? 1)
