@@ -1,0 +1,26 @@
+{
+  "name": "snipforge",
+  "version": "0.1.0",
+  "description": "Save and retrieve code snippets from the terminal",
+  "type": "module",
+  "bin": {
+    "snipforge": "./dist/snipforge.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "bun build.mjs",
+    "prepublishOnly": "bun build.mjs",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@devsnap/core": "*",
+    "@devsnap/typescript-config": "*",
+    "@types/node": "^22.0.0",
+    "bun-types": "latest",
+    "commander": "^12.0.0",
+    "typescript": "5.9.2"
+  }
+}

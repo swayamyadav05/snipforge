@@ -1,0 +1,35 @@
+{
+  "name": "snipforge-vscode",
+  "displayName": "SnipForge",
+  "description": "Save and retrieve code snippets directly from VS Code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "publisher": "swayamdev05",
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "snipforge.saveSelection",
+        "title": "SnipForge: Save Selection"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "dev": "node esbuild.mjs --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@devsnap/core": "*",
+    "@devsnap/typescript-config": "*",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.80.0",
+    "esbuild": "^0.24.0",
+    "typescript": "5.9.2"
+  }
+}

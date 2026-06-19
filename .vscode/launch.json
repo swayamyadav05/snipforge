@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run DevSnap Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/apps/vscode-ext",
+        "--disable-extensions"
+      ],
+      "preLaunchTask": "build-extension",
+      "outFiles": ["${workspaceFolder}/apps/vscode-ext/dist/**/*.js"],
+      "sourceMaps": true
+    }
+  ]
+}

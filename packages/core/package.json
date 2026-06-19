@@ -1,0 +1,21 @@
+{
+  "name": "@devsnap/core",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@insforge/sdk": "latest",
+    "highlight.js": "^11.10.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@devsnap/typescript-config": "*",
+    "@types/node": "^22.0.0",
+    "typescript": "5.9.2"
+  }
+}
