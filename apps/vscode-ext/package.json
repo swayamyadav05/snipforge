@@ -26,6 +26,14 @@
       {
         "command": "snipforge.saveSelection",
         "title": "SnipForge: Save Selection"
+      },
+      {
+        "command": "snipforge.listSnippets",
+        "title": "SnipForge: List Snippets"
+      },
+      {
+        "command": "snipforge.getSnippet",
+        "title": "SnipForge: Get Snippet by Slug"
       }
     ]
   },
@@ -34,8 +42,12 @@
     "dev": "node esbuild.mjs --watch",
     "check-types": "tsc --noEmit"
   },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  },
   "devDependencies": {
     "@devsnap/typescript-config": "*",
+    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.80.0",
     "esbuild": "^0.24.0",

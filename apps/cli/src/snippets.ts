@@ -48,21 +48,20 @@ export function saveSnippet(input: {
   const id = crypto.randomUUID()
   const slug = generateSlug(input.title)
 
-  db.run(
+  db.prepare(
     `INSERT INTO snippets (id, slug, title, code, language, description, tags)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, slug, input.title, input.code, language, input.description ?? null, JSON.stringify(input.tags ?? [])]
-  )
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(id, slug, input.title, input.code, language, input.description ?? null, JSON.stringify(input.tags ?? []))
 
-  return mapRow(db.query('SELECT * FROM snippets WHERE id = ?').get(id) as Row)
+  return mapRow(db.prepare('SELECT * FROM snippets WHERE id = ?').get(id) as Row)
 }
 
 export function listAllSnippets(): Snippet[] {
-  const rows = db.query('SELECT * FROM snippets ORDER BY created_at DESC').all() as Row[]
+  const rows = db.prepare('SELECT * FROM snippets ORDER BY created_at DESC').all() as Row[]
   return rows.map(mapRow)
 }
 
 export function findSnippetBySlug(slug: string): Snippet | null {
-  const row = db.query('SELECT * FROM snippets WHERE slug = ?').get(slug) as Row | null
+  const row = db.prepare('SELECT * FROM snippets WHERE slug = ?').get(slug) as Row | null
   return row ? mapRow(row) : null
 }

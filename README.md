@@ -6,12 +6,11 @@ A personal code snippet manager for developers. Save snippets from your terminal
 
 ### CLI — `snipforge`
 
-Install globally and use from any terminal:
+Install globally with any package manager — Node.js 18+ is all that's required:
 
 ```bash
-bun add -g snipforge
-# or
 npm install -g snipforge
+# pnpm / yarn / bun also work
 ```
 
 [CLI docs →](apps/cli/README.md)
@@ -35,17 +34,25 @@ Browse, search, and manage your snippets in the browser.
 
 ---
 
+## How storage works
+
+The CLI and VS Code extension share a single SQLite file at `~/.snipforge/snippets.db`. Save a snippet from either tool and it's instantly visible in the other — no sync, no cloud, nothing leaving your machine.
+
+| Tool | Reads/writes |
+|---|---|
+| CLI (`snipforge`) | `~/.snipforge/snippets.db` |
+| VS Code extension | `~/.snipforge/snippets.db` |
+| Web app | Insforge cloud DB (per-user, requires sign-in) |
+
 ## Contributing / Development
 
-If you want to build on SnipForge or run everything locally:
-
-**Prerequisites:** [Bun](https://bun.sh) and [Turborepo](https://turborepo.dev) (`bun add -g turbo`)
+**Prerequisites:** [Bun](https://bun.sh) (for the dev environment), Node.js 18+
 
 ```bash
 git clone https://github.com/swayamyadav05/snipforge
 cd SnipForge
 bun install
-turbo dev     # starts all apps in watch mode
+bun run dev     # starts all apps in watch mode
 ```
 
 ### Repo layout
@@ -53,7 +60,7 @@ turbo dev     # starts all apps in watch mode
 ```
 SnipForge/
 ├── apps/
-│   ├── cli/           # snipforge CLI (Bun + commander)
+│   ├── cli/           # snipforge CLI (Node.js runtime, esbuild bundle)
 │   ├── vscode-ext/    # VS Code extension (esbuild bundle)
 │   └── web/           # Next.js snippet browser
 └── packages/

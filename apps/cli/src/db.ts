@@ -1,14 +1,14 @@
-import { Database } from 'bun:sqlite'
+import Database from 'better-sqlite3'
 import { homedir } from 'os'
 import { mkdirSync } from 'fs'
 import { join } from 'path'
 
-const dir = join(homedir(), '.devsnap')
+const dir = join(homedir(), '.snipforge')
 mkdirSync(dir, { recursive: true })
 
-export const db = new Database(join(dir, 'snippets.db'))
+export const db: ReturnType<typeof Database> = new Database(join(dir, 'snippets.db'))
 
-db.run(`
+db.exec(`
   CREATE TABLE IF NOT EXISTS snippets (
     id          TEXT PRIMARY KEY,
     slug        TEXT UNIQUE NOT NULL,

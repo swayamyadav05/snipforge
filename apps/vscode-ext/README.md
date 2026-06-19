@@ -1,6 +1,8 @@
 # SnipForge — VS Code Extension
 
-Save code snippets directly from your editor with one command. No account, no internet, no setup.
+Save, browse, and insert code snippets directly from your editor. No account, no internet, no setup.
+
+Snippets are stored in the same local SQLite file as the SnipForge CLI (`~/.snipforge/snippets.db`), so anything you save from VS Code is immediately available in the terminal and vice versa.
 
 ## Installation
 
@@ -11,21 +13,32 @@ Or from the terminal:
 code --install-extension swayamyadav05.snipforge
 ```
 
-## Usage
+## Commands
+
+Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and search for any of these:
+
+### SnipForge: Save Selection
 
 1. Select the code you want to save (or select nothing to save the whole file)
-2. Open the Command Palette: `Ctrl+Shift+P` / `Cmd+Shift+P`
-3. Run **SnipForge: Save Selection**
-4. Enter a title
-5. Enter optional tags (comma-separated), or press Enter to skip
+2. Run **SnipForge: Save Selection**
+3. Enter a title
+4. Enter optional tags (comma-separated), or press Enter to skip
 
-You'll see a confirmation: `SnipForge: Saved "your title" [language]`
+The language is detected automatically from the file you're editing. A confirmation shows the title, language, and slug — you can use the slug to retrieve the snippet from the CLI with `snipforge get <slug>`.
 
-The language is detected automatically from the file you're editing — no manual selection needed.
+### SnipForge: List Snippets
+
+Opens a searchable list of all your saved snippets. Select one to insert its code at your cursor. If no editor is open, the code is copied to your clipboard instead.
+
+Snippets saved from the CLI appear here automatically — no import needed.
+
+### SnipForge: Get Snippet by Slug
+
+Enter a snippet's slug to insert it at your cursor directly. Useful when you already know the slug from `snipforge list`.
 
 ## Storage
 
-Snippets are saved in VS Code's built-in storage (`globalState`), scoped to this extension. They persist across restarts automatically. Nothing leaves your machine.
+Snippets are saved to `~/.snipforge/snippets.db` — a plain SQLite file that the CLI also reads and writes. Nothing leaves your machine.
 
 ---
 
@@ -33,7 +46,7 @@ Snippets are saved in VS Code's built-in storage (`globalState`), scoped to this
 
 If you want to contribute or run from source:
 
-**Prerequisites:** [Bun](https://bun.sh), VS Code
+**Prerequisites:** Node.js 18+, VS Code. Bun is optional (only needed if you want to use `bun run` for dev scripts).
 
 ```bash
 git clone https://github.com/swayamyadav05/snipforge
@@ -45,10 +58,10 @@ Press `F5` in VS Code to open an Extension Development Host with SnipForge loade
 
 **To package as a `.vsix` for local install:**
 ```bash
-bun add -g @vscode/vsce
+npm install -g @vscode/vsce
 cd apps/vscode-ext
 vsce package
-code --install-extension snipforge-0.0.1.vsix
+code --install-extension snipforge-vscode-0.0.2.vsix
 ```
 
 **To publish to the VS Code Marketplace:**

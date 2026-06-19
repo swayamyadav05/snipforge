@@ -4,7 +4,6 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["bun-types"],
     "paths": {
       "@devsnap/core": ["../../packages/core/src/index.ts"]
     }

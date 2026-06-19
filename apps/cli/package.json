@@ -24,16 +24,20 @@
   ],
   "scripts": {
     "dev": "bun run src/index.ts",
-    "build": "bun build.mjs",
-    "prepublishOnly": "bun build.mjs",
+    "build": "node build.mjs",
+    "prepublishOnly": "node build.mjs",
     "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
   },
   "devDependencies": {
     "@devsnap/core": "*",
     "@devsnap/typescript-config": "*",
+    "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
-    "bun-types": "latest",
     "commander": "^12.0.0",
+    "esbuild": "^0.24.0",
     "typescript": "5.9.2"
   }
 }

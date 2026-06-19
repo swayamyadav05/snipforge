@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { Command } from 'commander'
 import { readFileSync } from 'fs'
 import * as readline from 'readline'
@@ -54,7 +53,11 @@ program
       closeAsk()
     } else if (!process.stdin.isTTY) {
       // ── Stdin pipe: code comes from the pipe, --title required ──
-      code = await Bun.stdin.text()
+      code = await new Promise<string>((resolve) => {
+        const chunks: Buffer[] = []
+        process.stdin.on('data', (c: Buffer) => chunks.push(c))
+        process.stdin.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
+      })
       if (!title) {
         console.error('--title is required when piping code.\n  Example: cat hook.ts | devsnap add --title "My hook"')
         process.exit(1)

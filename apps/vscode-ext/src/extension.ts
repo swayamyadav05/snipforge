@@ -1,8 +1,11 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
+import { homedir } from "os";
+import { mkdirSync } from "fs";
+import { join } from "path";
+import Database from "better-sqlite3";
 
-// Inlined from @devsnap/core so the extension has no workspace symlink dependencies.
-// vsce follows symlinks into packages/core and pulls in the entire monorepo otherwise.
+// Inlined from @devsnap/core — vsce follows symlinks and would pull in the entire monorepo.
 type Snippet = {
   id: string;
   slug: string;
@@ -15,9 +18,20 @@ type Snippet = {
   updatedAt: string;
 };
 
+type Row = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  code: string;
+  language: string;
+  tags: string;
+  created_at: string;
+  updated_at: string;
+};
+
 // VS Code uses its own language ID strings (e.g. "typescriptreact", "shellscript").
-// Our core uses names that match highlight.js / file extensions (e.g. "typescript", "bash").
-// This map bridges the two systems.
+// Our schema uses names that match highlight.js / file extensions (e.g. "typescript", "bash").
 const VSCODE_LANG_MAP: Record<string, string> = {
   typescript: "typescript",
   javascript: "javascript",
@@ -56,37 +70,81 @@ function generateSlug(title: string): string {
   return base ? `${base}-${suffix}` : suffix;
 }
 
-// VS Code's globalState is a key-value store backed by SQLite internally.
-// It persists across VS Code restarts and is scoped to the extension.
-function loadSnippets(context: vscode.ExtensionContext): Snippet[] {
-  return context.globalState.get<Snippet[]>("snippets", []);
+function mapRow(row: Row): Snippet {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.description,
+    code: row.code,
+    language: row.language,
+    tags: JSON.parse(row.tags) as string[],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
-function persistSnippets(
-  context: vscode.ExtensionContext,
-  snippets: Snippet[],
-): Thenable<void> {
-  return context.globalState.update("snippets", snippets);
+// Shared SQLite DB at ~/.devsnap/snippets.db — same file the CLI uses.
+const dbDir = join(homedir(), ".snipforge");
+mkdirSync(dbDir, { recursive: true });
+const db = new Database(join(dbDir, "snippets.db"));
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS snippets (
+    id          TEXT PRIMARY KEY,
+    slug        TEXT UNIQUE NOT NULL,
+    title       TEXT NOT NULL,
+    description TEXT,
+    code        TEXT NOT NULL,
+    language    TEXT NOT NULL,
+    tags        TEXT NOT NULL DEFAULT '[]',
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+    updated_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now'))
+  )
+`);
+
+function dbSave(snippet: Snippet): void {
+  db.prepare(
+    `INSERT INTO snippets (id, slug, title, code, language, description, tags)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    snippet.id,
+    snippet.slug,
+    snippet.title,
+    snippet.code,
+    snippet.language,
+    snippet.description,
+    JSON.stringify(snippet.tags)
+  );
+}
+
+function dbList(): Snippet[] {
+  return (
+    db
+      .prepare("SELECT * FROM snippets ORDER BY created_at DESC")
+      .all() as Row[]
+  ).map(mapRow);
+}
+
+function dbFindBySlug(slug: string): Snippet | null {
+  const row = db
+    .prepare("SELECT * FROM snippets WHERE slug = ?")
+    .get(slug) as Row | null;
+  return row ? mapRow(row) : null;
 }
 
 // activate() is called by VS Code when the extension first wakes up.
-// The ExtensionContext gives you access to storage, subscriptions, and extension metadata.
 export function activate(context: vscode.ExtensionContext) {
-  // registerCommand ties a command ID (matching contributes.commands in package.json)
-  // to a handler function. Nothing runs until the user actually invokes the command.
+  // ── Save Selection ──────────────────────────────────────────────────────────
   const saveCmd = vscode.commands.registerCommand(
     "snipforge.saveSelection",
     async () => {
-      // activeTextEditor is the file the user is currently looking at.
-      // It can be undefined if the user has no file open (e.g. just the welcome tab).
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("SnipForge: No active editor.");
         return;
       }
 
-      // editor.selection is the current cursor position/highlighted range.
-      // If nothing is selected, selection.isEmpty is true — we fall back to the whole file.
       const selection = editor.selection;
       const code = selection.isEmpty
         ? editor.document.getText()
@@ -94,32 +152,27 @@ export function activate(context: vscode.ExtensionContext) {
 
       if (!code.trim()) {
         vscode.window.showWarningMessage(
-          "SnipForge: Nothing to save — selection is empty.",
+          "SnipForge: Nothing to save — selection is empty."
         );
         return;
       }
 
-      // VS Code already knows the language — languageId is set by the editor itself.
-      // We map common VS Code IDs to our names (e.g. "shellscript" → "bash").
-      // If there's no mapping entry, the languageId itself is a fine fallback.
       const vscodeLangId = editor.document.languageId;
       const language = VSCODE_LANG_MAP[vscodeLangId] ?? vscodeLangId;
 
-      // showInputBox shows a small text input at the top of VS Code.
-      // Returns the string the user typed, or undefined if they pressed Escape.
       const title = await vscode.window.showInputBox({
         prompt: "Snippet title",
         placeHolder: "e.g. Debounce hook",
-        ignoreFocusOut: true, // don't close if user clicks elsewhere
+        ignoreFocusOut: true,
       });
-      if (title === undefined) return; // Escape pressed — user cancelled
+      if (title === undefined) return;
 
       const tagsRaw = await vscode.window.showInputBox({
         prompt: "Tags (optional, comma-separated)",
         placeHolder: "react, hooks, typescript",
         ignoreFocusOut: true,
       });
-      if (tagsRaw === undefined) return; // Escape pressed
+      if (tagsRaw === undefined) return;
 
       const tags = tagsRaw
         ? tagsRaw
@@ -141,23 +194,82 @@ export function activate(context: vscode.ExtensionContext) {
         updatedAt: now,
       };
 
-      const snippets = loadSnippets(context);
-      snippets.unshift(snippet); // newest first
-      await persistSnippets(context, snippets);
-
-      // showInformationMessage shows the green notification at the bottom-right of VS Code.
+      dbSave(snippet);
       vscode.window.showInformationMessage(
-        `SnipForge: Saved "${title}" [${language}]`,
+        `SnipForge: Saved "${title}" [${language}] — slug: ${snippet.slug}`
       );
-    },
+    }
   );
 
-  // context.subscriptions is VS Code's cleanup list.
-  // When the extension is deactivated, VS Code calls dispose() on everything in this array.
-  // If you forget to push here, you leak command registrations.
-  context.subscriptions.push(saveCmd);
+  // ── List Snippets ───────────────────────────────────────────────────────────
+  const listCmd = vscode.commands.registerCommand(
+    "snipforge.listSnippets",
+    async () => {
+      const snippets = dbList();
+
+      if (snippets.length === 0) {
+        vscode.window.showInformationMessage(
+          "SnipForge: No snippets yet. Use 'SnipForge: Save Selection' to save one."
+        );
+        return;
+      }
+
+      const items = snippets.map((s) => ({
+        label: s.title,
+        description: `[${s.language}]${s.tags.length ? "  " + s.tags.join(", ") : ""}`,
+        detail: s.slug,
+        snippet: s,
+      }));
+
+      const picked = await vscode.window.showQuickPick(items, {
+        placeHolder: "Pick a snippet to insert at cursor",
+        matchOnDescription: true,
+        matchOnDetail: true,
+      });
+
+      if (!picked) return;
+      insertAtCursor(picked.snippet.code);
+    }
+  );
+
+  // ── Get Snippet by Slug ─────────────────────────────────────────────────────
+  const getCmd = vscode.commands.registerCommand(
+    "snipforge.getSnippet",
+    async () => {
+      const slug = await vscode.window.showInputBox({
+        prompt: "Snippet slug",
+        placeHolder: "e.g. debounce-hook-a3f2",
+        ignoreFocusOut: true,
+      });
+      if (!slug) return;
+
+      const snippet = dbFindBySlug(slug.trim());
+      if (!snippet) {
+        vscode.window.showErrorMessage(`SnipForge: No snippet found: ${slug}`);
+        return;
+      }
+
+      insertAtCursor(snippet.code);
+    }
+  );
+
+  context.subscriptions.push(saveCmd, listCmd, getCmd);
 }
 
-// deactivate() is called when VS Code is shutting down or the extension is disabled.
-// For simple extensions like ours, there's nothing to clean up manually.
-export function deactivate() {}
+function insertAtCursor(code: string): void {
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    editor.edit((eb) => eb.insert(editor.selection.active, code));
+  } else {
+    // No editor open — copy to clipboard as fallback
+    vscode.env.clipboard.writeText(code).then(() => {
+      vscode.window.showInformationMessage(
+        "SnipForge: No editor open — snippet copied to clipboard."
+      );
+    });
+  }
+}
+
+export function deactivate() {
+  db.close();
+}

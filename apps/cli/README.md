@@ -5,9 +5,11 @@ Save and retrieve code snippets from your terminal. Everything is stored locally
 ## Installation
 
 ```bash
-bun add -g snipforge
-# or
 npm install -g snipforge
+# or with any other package manager
+pnpm add -g snipforge
+yarn global add snipforge
+bun add -g snipforge
 ```
 
 Verify it works:
@@ -15,6 +17,8 @@ Verify it works:
 ```bash
 snipforge --version
 ```
+
+**Requirements:** Node.js 18+ (no Bun required).
 
 ## Commands
 
@@ -72,7 +76,9 @@ snipforge get use-debounce-a3f2 > src/hooks/useDebounce.ts   # write to a file
 
 ## Storage
 
-Snippets are saved to `~/.snipforge/snippets.db` — a SQLite file on your machine. Nothing leaves your computer.
+Snippets are saved to `~/.snipforge/snippets.db` — a plain SQLite file on your machine. Nothing leaves your computer.
+
+The **VS Code extension uses the same file**, so snippets saved from either tool are immediately visible in the other. No sync step needed.
 
 ---
 
@@ -83,12 +89,7 @@ If you want to contribute or run from source:
 ```bash
 git clone https://github.com/swayamyadav05/snipforge
 cd SnipForge
-bun install
-bun run apps/cli/src/index.ts   # run without installing
-```
-
-To register locally as the `snipforge` command:
-```bash
-cd apps/cli
-bun link
+bun install           # Bun is only needed for the dev environment
+node apps/cli/build.mjs   # build
+node apps/cli/dist/snipforge.js --help   # run without installing
 ```

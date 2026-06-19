@@ -9,7 +9,7 @@ const ctx = await esbuild.context({
   platform: 'node',
   format: 'cjs',
   target: 'node18',
-  external: ['vscode'],
+  external: ['vscode', 'better-sqlite3'],
   sourcemap: true,
   minify: false,
 })
