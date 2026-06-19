@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "snipforge": "./dist/snipforge.js"
+    "snipforge": "./dist/snipforge"
   },
   "repository": {
     "type": "git",
