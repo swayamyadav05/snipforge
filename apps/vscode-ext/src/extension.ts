@@ -1,6 +1,19 @@
 import * as vscode from "vscode";
 import { randomUUID } from "crypto";
-import type { Snippet } from "@devsnap/core";
+
+// Inlined from @devsnap/core so the extension has no workspace symlink dependencies.
+// vsce follows symlinks into packages/core and pulls in the entire monorepo otherwise.
+type Snippet = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  code: string;
+  language: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+};
 
 // VS Code uses its own language ID strings (e.g. "typescriptreact", "shellscript").
 // Our core uses names that match highlight.js / file extensions (e.g. "typescript", "bash").

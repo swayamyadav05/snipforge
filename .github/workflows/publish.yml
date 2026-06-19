@@ -51,5 +51,5 @@ jobs:
         working-directory: apps/vscode-ext
 
       - name: Publish to VS Code Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_PAT }}
+        run: vsce publish --no-dependencies -p ${{ secrets.VSCE_PAT }}
         working-directory: apps/vscode-ext

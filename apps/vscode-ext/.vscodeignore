@@ -1,5 +1,5 @@
 src/
-esbuild.js
+esbuild.mjs
 tsconfig.json
 node_modules/
-.git/
+.gitignore

@@ -35,7 +35,6 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@devsnap/core": "*",
     "@devsnap/typescript-config": "*",
     "@types/node": "^22.0.0",
     "@types/vscode": "^1.80.0",
