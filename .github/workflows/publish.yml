@@ -29,6 +29,8 @@ jobs:
       - name: Publish to npm
         run: npm publish --provenance --access public
         working-directory: apps/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-vscode:
     name: Publish VS Code extension

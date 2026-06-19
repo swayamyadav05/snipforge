@@ -43,6 +43,9 @@ yarn-error.log*
 # InsForge AI agent instructions (internal, not part of the project)
 AGENTS.md
 
+# Internal planning document (decisions captured in CLAUDE.md)
+DESIGN.md
+
 # vsce credentials
 .vsce
 

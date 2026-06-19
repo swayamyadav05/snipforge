@@ -1,75 +1,101 @@
-# DevSnap — Code Snippet Ecosystem
+# CLAUDE.md
 
-A monorepo where a CLI, VS Code extension, and web app all share one brain.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## The idea
+## Commands
 
-Developers save code snippets from three places (terminal, editor, browser) and they all sync to the same store. `packages/core` is the single source of truth — schema changes, parser logic, and DB calls live there once and flow to every app automatically.
+**Package manager:** Bun. All installs and scripts use `bun`.
 
-## Repo layout
+```bash
+bun install               # install all workspace deps
+bun run build             # turbo: build all packages/apps
+bun run dev               # turbo: start all apps in watch mode
+bun run lint              # turbo: lint all
+bun run check-types       # turbo: tsc --noEmit across all
+bun run format            # prettier write on all ts/tsx/md
+```
+
+**Per-app commands (run from the app directory):**
+
+| App | Dev | Build |
+|---|---|---|
+| `apps/cli` | `bun run src/index.ts` | `bun build.mjs` |
+| `apps/vscode-ext` | `node esbuild.mjs --watch` | `node esbuild.mjs` |
+| `apps/web` | `next dev --port 3000` | `next build` |
+
+There are no test files in this repo yet.
+
+## Architecture
+
+### Repo layout
 
 ```
 DevSnap/
 ├── apps/
-│   ├── web/           # Next.js — browse, search, share snippets
-│   ├── cli/           # devsnap add / devsnap get <slug>
-│   └── vscode-ext/    # Right-click → "Save as DevSnap"
+│   ├── cli/           # snipforge CLI (Bun + Commander)
+│   ├── vscode-ext/    # VS Code extension (esbuild bundle)
+│   └── web/           # Next.js 16 App Router snippet browser
 └── packages/
-    └── core/          # Snippet schema, syntax highlighter, DB client
+    ├── core/          # Shared schema, cloud DB client, language detection, highlighting
+    └── typescript-config/   # Shared tsconfig bases (base, nextjs, react-library)
 ```
 
-## Apps
+### packages/core
 
-### apps/web (Next.js)
-- Snippet browser with search and filtering by language/tag
-- Public snippet sharing via slug URL
-- Syntax-highlighted preview using core's highlighter
+The shared library. All apps import from `@devsnap/core`.
+
+- **Schema** (`src/schema.ts`) — Zod schemas and TypeScript types: `Snippet`, `CreateSnippetInput`, `UpdateSnippetInput`, `SnippetFilters`
+- **Client** (`src/client.ts`) — `insforge` client (Supabase-compatible SDK). Reads `NEXT_PUBLIC_INSFORGE_PROJECT_URL` and `NEXT_PUBLIC_INSFORGE_ANON_KEY` from env.
+- **Snippets** (`src/snippets.ts`) — CRUD functions (`createSnippet`, `listSnippets`, `getSnippet`, `updateSnippet`, `deleteSnippet`) against the cloud DB via `insforge`. RLS enforces per-user isolation automatically.
+- **Auth** (`src/auth.ts`) — GitHub OAuth via `insforge.auth` (`signInWithGitHub`, `signOut`, `getSession`)
+- **Detect** (`src/detect.ts`) — `detectLanguage(code)` uses `highlight.js` `highlightAuto`; `languageFromExtension(filename)` maps file extensions to language names
+- **Highlight** (`src/highlight.ts`) — `highlightCode` wraps `highlight.js`
+
+### Data store split (important)
+
+Each surface has its **own** local storage — they do **not** share the same DB:
+
+| App | Store | Location |
+|---|---|---|
+| `apps/web` | Insforge cloud DB | Remote, per-user via RLS |
+| `apps/cli` | SQLite via `bun:sqlite` | `~/.devsnap/snippets.db` |
+| `apps/vscode-ext` | VS Code `globalState` | VS Code's internal key-value store |
+
+The CLI and VS Code extension use `core`'s schema types but **not** its `snippets.ts` functions — they write to their own local stores directly.
 
 ### apps/cli
-- `devsnap add` — pipe stdin or a file path into the store
-- `devsnap get <slug>` — copy a snippet to clipboard or stdout
-- `devsnap list` — table view of saved snippets
+
+Binary name: `snipforge`. Three commands:
+- `snipforge add [file]` — reads from file path, stdin pipe, or interactive paste; detects language from file extension or `core`'s `detectLanguage`
+- `snipforge get <slug>` — prints snippet code to stdout
+- `snipforge list` — tabular view of all saved snippets
+
+Built by `bun build.mjs` → `dist/snipforge.js` (prepends `#!/usr/bin/env bun` shebang).
 
 ### apps/vscode-ext
-- Command palette: "DevSnap: Save Selection"
-- Picks up language from the active editor automatically
-- Calls core's save function directly — no HTTP round-trip needed locally
 
-## packages/core
+Command palette entry: **"SnipForge: Save Selection"** (`snipforge.saveSelection`).
 
-Everything shared:
-- **Schema** — `Snippet` type: `{ id, slug, title, language, body, tags, createdAt }`
-- **DB client** — wraps SQLite (local) or a hosted DB (cloud sync)
-- **Parser** — extracts language, strips leading whitespace, generates slug from title
-- **Highlighter** — thin wrapper around shiki so web and CLI render the same colors
+Saves selected text (or whole file if nothing selected) into VS Code's `globalState`. Language is detected from the editor's `languageId` via a hardcoded `VSCODE_LANG_MAP`. Bundled as CJS by esbuild with `vscode` marked external.
 
-## Tech choices (to decide when building)
+### apps/web
 
-| Concern | Candidate |
-|---|---|
-| Monorepo tooling | Turborepo |
-| Package manager | pnpm workspaces |
-| Language | TypeScript throughout |
-| Local DB | SQLite via `better-sqlite3` |
-| Syntax highlighting | shiki |
-| CLI framework | commander or yargs |
-| VS Code ext | `vscode` API + esbuild bundle |
-| Web styling | Tailwind CSS |
+Next.js 16 with the App Router. All pages are `'use client'` components.
 
-## Key monorepo benefit
+- `/` — Sign-in page, redirects to `/dashboard` if already authed
+- `/dashboard` — Protected layout; calls `getSession()` on mount, redirects to `/` if unauthenticated
+- `/dashboard` (page) — Snippet list with client-side search/language/tag filtering
+- `/dashboard/new` — Create snippet form; auto-detects language from pasted code (500ms debounce)
 
-Change `Snippet` schema in `packages/core` → TypeScript errors surface in all three apps immediately. No API contract drift, no duplicated types.
+Styling: Tailwind CSS + `highlight.js/styles/github-dark.css`.
 
-## First steps when starting
+### Environment variables
 
-1. `pnpm init` + `turbo.json` at root
-2. Scaffold `packages/core` with the `Snippet` type and a SQLite client
-3. Build `apps/cli` first — fastest feedback loop, no UI needed
-4. Wire `apps/web` next — core is already tested via CLI
-5. Add `apps/vscode-ext` last — it bundles core as a dependency
+The web app (and `packages/core`) requires:
 
-## Out of scope (for now)
+```
+NEXT_PUBLIC_INSFORGE_PROJECT_URL=<your insforge project URL>
+NEXT_PUBLIC_INSFORGE_ANON_KEY=<your insforge anon key>
+```
 
-- Cloud sync / authentication
-- Snippet versioning
-- Team sharing / access control
+Place these in `apps/web/.env.local`.
