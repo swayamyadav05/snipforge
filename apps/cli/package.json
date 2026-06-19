@@ -6,6 +6,15 @@
   "bin": {
     "snipforge": "./dist/snipforge.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swayamyadav05/snipforge.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/swayamyadav05/snipforge#readme",
+  "bugs": {
+    "url": "https://github.com/swayamyadav05/snipforge/issues"
+  },
   "files": [
     "dist"
   ],

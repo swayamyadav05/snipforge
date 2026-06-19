@@ -10,6 +10,15 @@
     "Other"
   ],
   "publisher": "swayamdev05",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swayamyadav05/snipforge.git",
+    "directory": "apps/vscode-ext"
+  },
+  "homepage": "https://github.com/swayamyadav05/snipforge#readme",
+  "bugs": {
+    "url": "https://github.com/swayamyadav05/snipforge/issues"
+  },
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
