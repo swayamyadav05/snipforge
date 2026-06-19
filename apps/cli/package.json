@@ -2,6 +2,7 @@
   "name": "snipforge",
   "version": "0.1.0",
   "description": "Save and retrieve code snippets from the terminal",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "snipforge": "./dist/snipforge.js"
@@ -16,7 +17,9 @@
     "url": "https://github.com/swayamyadav05/snipforge/issues"
   },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "dev": "bun run src/index.ts",

@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'fs'
 
+rmSync('dist', { recursive: true, force: true })
 mkdirSync('dist', { recursive: true })
 
 const result = await Bun.build({
