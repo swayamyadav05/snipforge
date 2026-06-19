@@ -44,12 +44,16 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Install native extension dependency
-        # better-sqlite3 ships a platform-specific native binary.
-        # Running npm install here places it in apps/vscode-ext/node_modules
-        # so vsce can bundle it alongside the extension JS.
-        run: npm install better-sqlite3
-        working-directory: apps/vscode-ext
+      - name: Stage native dependency for vsce packaging
+        # bun install compiled better-sqlite3 for this platform at the workspace root.
+        # Copy it (and its two runtime deps) into the ext directory so vsce bundles them.
+        # npm install fails here because the ext's package.json has workspace-only devDeps
+        # that npm can't resolve from the registry.
+        run: |
+          mkdir -p apps/vscode-ext/node_modules
+          cp -rL node_modules/better-sqlite3 apps/vscode-ext/node_modules/better-sqlite3
+          cp -rL node_modules/bindings       apps/vscode-ext/node_modules/bindings       2>/dev/null || true
+          cp -rL node_modules/file-uri-to-path apps/vscode-ext/node_modules/file-uri-to-path 2>/dev/null || true
 
       - name: Install vsce
         run: bun add -g @vscode/vsce
