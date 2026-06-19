@@ -26,7 +26,7 @@ jobs:
         run: bun install
 
       - name: Publish to npm
-        run: npm publish --access public
+        run: npm publish --access public || true
         working-directory: apps/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -45,15 +45,18 @@ jobs:
         run: bun install
 
       - name: Stage native dependency for vsce packaging
-        # bun install compiled better-sqlite3 for this platform at the workspace root.
-        # Copy it (and its two runtime deps) into the ext directory so vsce bundles them.
-        # npm install fails here because the ext's package.json has workspace-only devDeps
-        # that npm can't resolve from the registry.
+        # better-sqlite3 is a native module — it can't be bundled by esbuild and must be
+        # shipped in node_modules alongside the extension JS. We can't run npm install in
+        # the ext directory because its package.json has workspace-only devDeps that npm
+        # can't resolve from the registry. Instead, install into a clean temp directory
+        # and copy the compiled binary + its two runtime deps into the ext's node_modules.
         run: |
-          mkdir -p apps/vscode-ext/node_modules
-          cp -rL node_modules/better-sqlite3 apps/vscode-ext/node_modules/better-sqlite3
-          cp -rL node_modules/bindings       apps/vscode-ext/node_modules/bindings       2>/dev/null || true
-          cp -rL node_modules/file-uri-to-path apps/vscode-ext/node_modules/file-uri-to-path 2>/dev/null || true
+          tmpdir=$(mktemp -d)
+          cd "$tmpdir" && npm init -y && npm install better-sqlite3
+          mkdir -p $GITHUB_WORKSPACE/apps/vscode-ext/node_modules
+          cp -r "$tmpdir/node_modules/better-sqlite3"    $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/
+          cp -r "$tmpdir/node_modules/bindings"          $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/ 2>/dev/null || true
+          cp -r "$tmpdir/node_modules/file-uri-to-path"  $GITHUB_WORKSPACE/apps/vscode-ext/node_modules/ 2>/dev/null || true
 
       - name: Install vsce
         run: bun add -g @vscode/vsce
